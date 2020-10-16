@@ -1,4 +1,4 @@
-package com.javaTrain;
+package jvm;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/**
+ * @author daz2yy
+ */
 public class HelloClassloader extends ClassLoader {
     public static void main(String[] args) {
         try {
@@ -28,7 +31,7 @@ public class HelloClassloader extends ClassLoader {
 
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
-        File f = new File(this.getClass().getResource("/").getPath() + "/Hello.xlass");
+        File f = new File(this.getClass().getResource("/Hello.xlass").getPath());
         int length = (int)f.length();
         byte[] bytes = new byte[length];
         try {
