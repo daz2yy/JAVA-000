@@ -1,28 +1,148 @@
 # 学习笔记
 
-**Week02 作业题目（周四）：**
+**1. GC 日志解读与分析**
 
-**1.**使用 GCLogAnalysis.java 自己演练一遍串行 / 并行 /CMS/G1 的案例。
+- 启动项：-XX:+PrintGCDetails
+- 分析：
+  - 初始Young区大小和 堆大小一致，因为没有 Old 区
+  - Young区减少的量 != 堆减少的大小，因为有部分 Young区数据转移到Old区
+  - FullGC 的时候才有 Old区的回收
 
-- javac GCLogAnalysis.java
-- java -XX:+UseSerialGC -XX:+PrintGCDetails -Xloggc:gc.serial.log GCLogAnalysis
-  - DefNew, Tenured
-- java -XX:+UseParallelGC -XX:+PrintGCDetails -Xloggc:gc.parallel.log GCLogAnalysis
-  - PSYoungGen, ParOldGen
-- java -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -Xloggc:gc.cms.log GCLogAnalysis
-- java -XX:+UseG1GC  -XX:MaxGCPauseMillis=10 -XX:+PrintGC -Xloggc:gc.g1.log GCLogAnalysis
+- 背景：堆内存配置小
 
-**2.**使用压测工具（wrk 或 sb），演练 gateway-server-0.0.1-SNAPSHOT.jar 示例。
+- 问题：多次FullGC后 OOM 错误。或者一直在 FullGC 
 
-- sb -u http://localhost:8801 -c 40 -N 30
+- 串行化GC：单线程，内存大就GC次数少，但是时间长
 
-**3.（选做）** 如果自己本地有可以运行的项目，可以按照 2 的方式进行演练。
-**4.（必做）** 根据上述自己对于 1 和 2 的演示，写一段对于不同 GC 的总结，提交到 Github。
+- **GC 分析工具：GCEasy，GCViewer**
 
-- GC与压测总结.md
 
-**Week02 作业题目（周六）：**
 
-**1.（选做）**运行课上的例子，以及 Netty 的例子，分析相关现象。
-**2.（必做）**写一段代码，使用 HttpClient 或 OkHttp 访问 [http://localhost:8801 ](http://localhost:8801/)，代码提交到 Github。
+**2. JVM线程堆栈数据分析**
+
+![img](.\images\clipboard.png)
+
+- 被诟病的 Thread：系统线程，效率低，栈内存大
+
+- JVM 内部线程分类：
+  1. VM 线程：单例的 VMThread 对象，负责执行 VM 操作
+  2. 定时任务线程：单例的 WatcherThread 对象，模拟在 VM 中执行定时操作的计时器终端
+  3. GC 线程：垃圾收集器中，用于支持并行和并发垃圾回收的线程
+  4. 编译器线程：将字节码编译为机器码
+  5. 信号分发线程：将进程的信号分配给 Java 业务代码处理
+
+- 安全点（safe point）：GC停顿点，等待线程到达安全点后进行GC
+  1. 方法代码中被植入了安全点检测入口
+  2. 线程栈不会再发生变化
+  3. JVM 的安全点状态：所有线程都处于安全点
+
+- 线程分析工具：
+
+![img](.\images\3-2.png)
+
+- fastthread 线程分析网站
+
+
+
+**3. 内存分析与相关工具**
+
+- Java 对象内存分析：
+  - 三部分：对象头，实例，外部对齐
+  - 一个机器字根据32位、64位机器分别为：4字节，8字节
+  - Class指针默认开启压缩，用4字节就可以
+  - 对齐部分，以8的倍数计算
+
+![img](.\images\3-3.png)
+
+- int[n] 是一个 Object 类型，多占12字节（4+4+4+ 4*n）
+  - int[128][2] 分析：
+  - int[128] 对象头：4字节，Class指针：4字节，数组长度：4字节，实例：4字节（是指针）
+  - int[2] 占用：24字节，乘以 128
+  - ==> 4+4+4+4*128+4对齐 + (4+4+4+2*4+4对齐)*128 =  3600
+
+- 类对象分析：
+
+![img](.\images\3-4.png)
+
+- **OutOfMemoryError: java heap space**
+  - 创建新对象的时候，剩余的堆内存不足以分配新的内存空间
+  - 可能原因：
+    1. 堆内存太小
+    2. 突然爆发的访问量
+    3. 内存泄露导致堆内存被沾满
+
+- **OutOfMemoryError: PermGen space/Metaspace**
+  - 原因：加载到内存中的 class 数量太多，体积太大，超过了设定大小
+  - 解决：增加内存解决
+
+- **OutOfMemoryError: Unable to create new native thread**
+- 创建线程数量已达上线
+- 解决：
+  1. 修改系统参数 ulimit -a
+  2. 降低 xss 参数，减少每个线程栈的使用内存
+  3. 查代码
+
+- 内存 Dump 分析工具：
+  - Eclipse MAT
+  - jhat
+
+
+
+**4. JVM 问题分析调优经验**
+
+1. 高分配速率（High Allocation Rate）
+   - 定义：单位时间内分配的内存量。单位：MB/sec
+   - 上一次垃圾收集之后，与下一次GC开始之前的年轻代使用量，除以时间差。
+   - 问题：速率过高，会导致 JVM 巨大的GC开销
+   - 正常系统：分配速率较低 ~ 回收速率 -> 健康
+   - 内存泄漏：分配速率 持续大于 回收速率 -> OOM
+   - 性能劣化：分配速率较高 ~ 回收速率 -> 亚健康
+
+2. 过早提升（Premature Promotion）
+   - 提升速率：单位时间内，从年轻代提升到老年代的数据量，单位 MB/sec
+   - 问题：
+     1. 短时间频繁的执行 FullGC
+     2. 每次 FullGC 后，老年代使用率低
+     3. 提升速率接近于分配速率
+   - 解决：
+     1. 增加年轻代大小，设置 JVM 启动参数
+     2. 增加 Minor GC 的次数，避免年轻代跑到老年代
+     3. 增大堆大小。
+
+**本质：年轻代是放快速释放的临时对象，老年代是放持久的对象**
+
+
+
+**5. GC 疑难情况问题分析**
+
+- 阿里巴巴的 Arthas 工具
+
+- 分析，排查问题：
+
+  1. 查询业务日志
+     - 请求压力大，出错误，外部API依赖
+  2. 查看系统资源和监控信息
+     - CPU，内存，IO，网络
+
+  3. 查看性能指标
+  4. 排查系统日志
+  5. APM
+  6. 排查应用系统
+     - 配置文件：启动参数，Spring配置（连接池50就好），JVM 监控，数据库参数，Log
+     - 内存问题
+     - GC问题
+     - 排查线程
+     - 排查代码
+     - 单元测试
+
+  7. 排除资源竞争、坏邻居效应？
+  8. 疑难问题排查分析手段
+
+**JVM 常见面试问题汇总**
+
+- 一次生产的 GC 优化：
+- 监控发现有尖刺的 GC 回收，排查日志
+- 更改 GC 算法
+- 最终发现是 JVM 获取系统内核是原系统的核数，而不是 docker 分配的核数；导致把所有内核都申请占用了，排队耗时
+- 通过显示指定使用的核数就可以了。
 
