@@ -20,7 +20,7 @@
 
 **2. JVM线程堆栈数据分析**
 
-![img](.\images\clipboard.png)
+![img](./images/clipboard.png)
 
 - 被诟病的 Thread：系统线程，效率低，栈内存大
 
@@ -38,7 +38,7 @@
 
 - 线程分析工具：
 
-![img](.\images\3-2.png)
+![img](./images/3-2.png)
 
 - fastthread 线程分析网站
 
@@ -52,7 +52,7 @@
   - Class指针默认开启压缩，用4字节就可以
   - 对齐部分，以8的倍数计算
 
-![img](.\images\3-3.png)
+![img](./images/3-3.png)
 
 - int[n] 是一个 Object 类型，多占12字节（4+4+4+ 4*n）
   - int[128][2] 分析：
@@ -62,7 +62,7 @@
 
 - 类对象分析：
 
-![img](.\images\3-4.png)
+![img](./images/3-4.png)
 
 - **OutOfMemoryError: java heap space**
   - 创建新对象的时候，剩余的堆内存不足以分配新的内存空间
