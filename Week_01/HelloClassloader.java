@@ -1,10 +1,14 @@
 package jvm;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * @author daz2yy
@@ -16,21 +20,14 @@ public class HelloClassloader extends ClassLoader {
             Object obj = aClass.newInstance();
             Method method = aClass.getMethod("hello");
             method.invoke(obj);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
             e.printStackTrace();
         }
     }
 
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
+//        File f = new File("D:\\Study\\Java\\JAVA-000\\Week_01\\Hello.xlass");
         File f = new File(this.getClass().getResource("/Hello.xlass").getPath());
         int length = (int)f.length();
         byte[] bytes = new byte[length];
@@ -40,9 +37,19 @@ public class HelloClassloader extends ClassLoader {
             e.printStackTrace();
             return super.findClass(name);
         }
+        decodeBytes(bytes);
+        return defineClass(name, bytes, 0, bytes.length);
+    }
+
+    private void decodeBytes(byte[] bytes) {
         for (int i = 0; i < bytes.length; ++i) {
             bytes[i] = (byte)(255 - bytes[i]);
         }
-        return defineClass(name, bytes, 0, bytes.length);
+    }
+
+    public Class<?> transfer(String name) throws IOException {
+        byte[] allByte = Files.readAllBytes(Paths.get("D:\\Study\\Java\\JAVA-000\\Week_01\\Hello.xlass"));
+        decodeBytes(allByte);
+        return defineClass(name, allByte, 0, allByte.length);
     }
 }
