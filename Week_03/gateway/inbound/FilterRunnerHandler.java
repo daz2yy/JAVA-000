@@ -16,15 +16,19 @@ public class FilterRunnerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        FullHttpRequest request = (FullHttpRequest) msg;
-        boolean result = filter.runFilter(request, ctx);
-        // 过滤器不通过，请求抛弃
-        if (!result) {
-            ReferenceCountUtil.release(msg);
-            ctx.writeAndFlush("Http Request Error.").addListener(ChannelFutureListener.CLOSE);
-            return;
+        try {
+            FullHttpRequest request = (FullHttpRequest) msg;
+            boolean result = filter.filter(request, ctx);
+            // 过滤器不通过，请求抛弃
+            if (!result) {
+                ReferenceCountUtil.release(msg);
+                ctx.writeAndFlush("Http Request Error.").addListener(ChannelFutureListener.CLOSE);
+                return;
+            }
+            // 下一个 pipeline channel 继续执行
+            ctx.fireChannelRead(msg);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        // 下一个 pipeline channel 继续执行
-        ctx.fireChannelRead(msg);
     }
 }

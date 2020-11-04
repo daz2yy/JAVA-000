@@ -7,7 +7,7 @@ public class NettyServerApplication {
     private final static String GATEWAY_VERSION = "1.0.0";
 
     public static void main(String[] args) {
-        String proxyServer = System.getProperty("server", "http://localhost:8088");
+        String proxyServer = System.getProperty("server", "http://www.baidu.com");
         String port = System.getProperty("port", "8888");
 
         //  http://localhost:8888/api/hello  ==> gateway API, 转发到 backend service

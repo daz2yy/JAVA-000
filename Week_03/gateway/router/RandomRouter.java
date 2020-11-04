@@ -1,5 +1,6 @@
 package gateway.router;
 
+import java.util.List;
 import java.util.Random;
 
 public class RandomRouter {
@@ -9,8 +10,9 @@ public class RandomRouter {
         this.random = new Random();
     }
 
-    public String getRandomServer(String[] servers) {
-        int num = random.nextInt() % (servers.length - 1);
-        return servers[num];
+    public String route(List<String> endpoints) {
+        int num = random.nextInt() % (endpoints.size() - 1);
+        return endpoints.get(num);
     }
+
 }
