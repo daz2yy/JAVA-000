@@ -1,3 +1,4 @@
+package util;
 
 import java.util.concurrent.CountDownLatch;
 public class LatchSample {
