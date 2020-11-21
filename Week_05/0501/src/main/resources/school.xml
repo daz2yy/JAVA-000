@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+                        http://www.springframework.org/schema/context
+                        http://www.springframework.org/schema/context/spring-context-3.2.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <bean id="student1" class="io.daz2yy.school.Student">
+        <property name="id" value="1" />
+        <property name="name" value="student1" />
+    </bean>
+
+
+    <bean id="student2" class="io.daz2yy.school.Student">
+        <property name="id" value="2" />
+        <property name="name" value="student2" />
+    </bean>
+
+    <bean id="klass1" class="io.daz2yy.school.Klass">
+        <property name="students" >
+            <list>
+                <ref bean="student1"/>
+                <ref bean="student2"/>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="school" class="io.daz2yy.school.School">
+        <property name="class1" ref="klass1"/>
+        <property name="student1" ref="student1"/>
+    </bean>
+
+</beans>

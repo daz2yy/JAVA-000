@@ -41,6 +41,8 @@ public class AnnotationBeanTest2 {
         bean2.setAge(222);
         System.out.println(bean2);
     
+        // bean1 == bean2
+        System.out.println(bean1);
 //        bean3.setName("bean3");
 //        bean3.setAge(333);
 //        System.out.println(bean3);
