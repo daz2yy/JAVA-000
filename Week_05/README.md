@@ -4,8 +4,8 @@
 
 ## 作业1-1：使用 Java 里的动态代理，实现一个简单的 AOP
 
-- 实现代码：
-- 测试用例：
+- 实现代码：https://github.com/daz2yy/JAVA-000/tree/main/Week_05/0501/src/main/java/io/daz2yy/spring/proxy
+- 测试用例：https://github.com/daz2yy/JAVA-000/tree/main/Week_05/0501/src/test/java/io/daz2yy/spring/proxy
 
 ## 作业1-2：实现Spring Bean的装配，方式越多越好（XML、Annotation都可以）
 
